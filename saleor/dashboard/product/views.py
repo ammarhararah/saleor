@@ -441,10 +441,13 @@ def product_images(request, product_pk):
 @staff_member_required
 @permission_required('product.manage_products')
 def product_image_create(request, product_pk):
+    print("************************************")
     product = get_object_or_404(Product, pk=product_pk)
     product_image = ProductImage(product=product)
     form = forms.ProductImageForm(
         request.POST or None, request.FILES or None, instance=product_image)
+    print("///////////////")
+    print(form)
     if form.is_valid():
         product_image = form.save()
         msg = pgettext_lazy(

@@ -46247,7 +46247,7 @@ exports[`Storyshots Views / Site settings / Page default 1`] = `
                   class="MuiInput-input-id"
                   name="name"
                   type="text"
-                  value="Saleor e-commerce"
+                  value="Alain Gardens"
                 />
               </div>
               <p
@@ -46535,7 +46535,7 @@ exports[`Storyshots Views / Site settings / Page form errors 1`] = `
                   class="MuiInput-input-id"
                   name="name"
                   type="text"
-                  value="Saleor e-commerce"
+                  value="Alain Gardens"
                 />
               </div>
               <p
