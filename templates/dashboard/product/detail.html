@@ -271,6 +271,22 @@
               <a href="{% url 'dashboard:product-image-list' product.pk %}" class="btn-flat waves-effect">{% trans "Edit images" %}</a>
             </div>
           </div>
+
+          <!-- <div class="card">
+            <div class="card-content">
+              <span class="card-title">{% trans "Videos" %}</span>
+              <div class="row">
+                {% for video in videos %}
+                  <div class="col s4">
+                    <img class="responsive-img" src="{{ video.video.thumbnail.255x255 }}" srcset="{{ video.video.thumbnail.255x255 }} 1x, {{ video.video.thumbnail.510x510 }} 2x" alt="{{ video.alt }}">
+                  </div>
+                {% endfor %}
+              </div>
+            </div>
+            <div class="card-action">
+              <a href="{% url 'dashboard:product-image-list' product.pk %}" class="btn-flat waves-effect">{% trans "Edit videos" %}</a>
+            </div>
+          </div> -->
         </div>
       </div>
     </div>

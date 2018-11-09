@@ -162,7 +162,7 @@ TEMPLATES = [{
         'string_if_invalid': '<< MISSING VARIABLE "%s" >>' if DEBUG else ''}}]
 
 # Make this unique, and don't share it with anybody.
-SECRET_KEY = 't1he%ueh2lwu=w+xk-uvvm+03q(25@o7qg_(+=1=@upi7d$drd'
+SECRET_KEY = '#ej^-g%4bpph4%dd2ifsgh0bd_e!v-bka_g-r8t5n%#d8hrial'
 
 MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -370,7 +370,7 @@ bootstrap4 = {
 TEST_RUNNER = ''
 
 ALLOWED_HOSTS = get_list(
-    os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1'))
+    os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1,139.59.190.225,alaingarden.ae,www.alaingarden.ae'))
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 

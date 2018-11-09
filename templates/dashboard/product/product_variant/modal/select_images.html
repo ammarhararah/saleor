@@ -7,16 +7,16 @@
 {% block form_class %}{% endblock %}
 
 {% block action_url %}
-{% url "dashboard:variant-images" product_pk=product.pk variant_pk=variant.pk %}
+{% url "dashboard:variant-videos" product_pk=product.pk variant_pk=variant.pk %}
 {% endblock %}
 
 {% block title %}
-{% trans "Select variant images" context "Dashboard variant images modal" %}
+{% trans "Select variant videos" context "Dashboard variant videos modal" %}
 {% endblock %}
 
 {% block content %}
   <div class="col s12">
-    <p>{% render_image_choice form.images %}</p>
+    <p>{% render_video_choice form.videos %}</p>
   </div>
 {% endblock content %}
 

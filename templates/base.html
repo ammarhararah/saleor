@@ -61,7 +61,7 @@
 
             {# We display language picker only if there're languages to pick from #}
             {% if LANGUAGES|length > 1 %}
-              {% get_current_language as LANGUAGE_CODE %}
+              <!-- {% get_current_language as LANGUAGE_CODE %}
               <li>
                 <div class="language-picker dropdown show">
                   <a class="dropdown-toggle dropdown-link " id="language-picker-button">
@@ -69,7 +69,7 @@
                   </a>
                   {% include "_language_picker.html" %}
                 </div>
-              </li>
+              </li> -->
             {% endif %}
             {% if user.is_authenticated %}
               {% if user.is_staff or request.impersonator.is_staff %}
@@ -120,7 +120,9 @@
               <span>{% trans "menu" context "Hamburger button text" %}</span>
             </div>
             <a href="{% url 'home' %}">
-              <svg data-src="{% static "images/logo-document.svg" %}" height="38px" width="176px"/>
+              <!-- <svg data-src="{% static "images/logo-document.svg" %}" height="38px" width="176px"/> -->
+            <img src="{% static "images/logo.png" %}" alt="AlainGardens" height="65px" width="176px">
+
             </a>
           </div>
           <div class="col-2 col-md-4 navbar__search static">
@@ -195,7 +197,8 @@
       <div class="row">
         <div class="col-md-3">
           <a href="{% url 'home' %}" class="footer__logo">
-            <svg data-src="{% static "images/logo-document.svg" %}" height="38px" width="176px"/>
+            <!-- <svg data-src="{% static "images/logo-document.svg" %}" height="38px" width="176px"/> -->
+            <img src="{% static "images/logo-footer.png" %}" alt="AlainGardens" height="65px" width="176px">
           </a>
         </div>
         <div class="col-md-3 col-sm-6">
