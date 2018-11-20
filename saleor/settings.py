@@ -58,30 +58,9 @@ DATABASES = {
 TIME_ZONE = 'America/Chicago'
 LANGUAGE_CODE = 'en'
 LANGUAGES = [
-    ('bg', _('Bulgarian')),
-    ('cs', _('Czech')),
-    ('de', _('German')),
     ('en', _('English')),
-    ('es', _('Spanish')),
-    ('fa-ir', _('Persian (Iran)')),
-    ('fr', _('French')),
-    ('hu', _('Hungarian')),
-    ('it', _('Italian')),
-    ('ja', _('Japanese')),
-    ('ko', _('Korean')),
-    ('nb', _('Norwegian')),
-    ('nl', _('Dutch')),
-    ('pl', _('Polish')),
-    ('pt-br', _('Portuguese (Brazil)')),
-    ('ro', _('Romanian')),
-    ('ru', _('Russian')),
-    ('ru-ru', _('Russian (Russia)')),
-    ('sk', _('Slovak')),
-    ('tr', _('Turkish')),
-    ('uk', _('Ukrainian')),
-    ('vi', _('Vietnamese')),
-    ('zh-hans', _('Chinese')),
-    ('zh-tw', _('Chinese (Taiwan)'))]
+    ('ar', _('Arabic')),
+    ]
 LOCALE_PATHS = [os.path.join(PROJECT_ROOT, 'locale')]
 USE_I18N = True
 USE_L10N = True
