@@ -1,4 +1,3 @@
-import itertools
 import json
 import os
 import random
@@ -6,13 +5,11 @@ import unicodedata
 import uuid
 from collections import defaultdict
 from datetime import date
-from decimal import Decimal
 from unittest.mock import patch
 
 from django.conf import settings
 from django.contrib.sites.models import Site
 from django.core.files import File
-from django.template.defaultfilters import slugify
 from django_countries.fields import Country
 from faker import Factory
 from faker.providers import BaseProvider
@@ -24,7 +21,6 @@ from ...account.utils import store_user_address
 from ...checkout import AddressType
 from ...core.utils.json_serializer import object_hook
 from ...core.utils.taxes import get_tax_rate_by_name, get_taxes_for_country
-from ...core.utils.text import strip_html_and_truncate
 from ...core.weight import zero_weight
 from ...dashboard.menu.utils import update_menu
 from ...discount import DiscountValueType, VoucherType
@@ -33,14 +29,14 @@ from ...menu.models import Menu
 from ...order.models import Fulfillment, Order
 from ...order.utils import update_order_status
 from ...page.models import Page
-from ...payment import ChargeStatus, TransactionKind
 from ...payment.models import Payment
 from ...payment.utils import get_billing_data
 from ...product.models import (
     Attribute, AttributeValue, Category, Collection, Product, ProductImage,
     ProductType, ProductVariant)
-from ...product.thumbnails import create_product_thumbnails
-from ...product.utils.attributes import get_name_from_attributes
+from ...product.thumbnails import (
+    create_category_background_image_thumbnails,
+    create_collection_background_image_thumbnails, create_product_thumbnails)
 from ...shipping.models import ShippingMethod, ShippingMethodType, ShippingZone
 from ...shipping.utils import get_taxed_shipping_price
 
@@ -56,7 +52,7 @@ COLLECTIONS_SCHEMA = [
         'image_name': 'summer.jpg'},
     {
         'name': 'Winter sale',
-        'image_name': 'sale.jpg'}]
+        'image_name': 'clothing.jpg'}]
 
 IMAGES_MAPPING = {
     61: ['saleordemoproduct_paints_01.png'],
@@ -89,8 +85,9 @@ IMAGES_MAPPING = {
         'saleordemoproduct_sneakers_02_2.png',
         'saleordemoproduct_sneakers_02_3.png',
         'saleordemoproduct_sneakers_02_4.png'],
-    89:
-    ['saleordemoproduct_cl_boot07_1.png', 'saleordemoproduct_cl_boot07_2.png'],
+    89: [
+        'saleordemoproduct_cl_boot07_1.png',
+        'saleordemoproduct_cl_boot07_2.png'],
     107: ['saleordemoproduct_cl_polo01.png'],
     108: ['saleordemoproduct_cl_polo02.png'],
     109: ['saleordemoproduct_cl_polo03-woman.png'],
@@ -117,9 +114,9 @@ IMAGES_MAPPING = {
 
 
 CATEGORY_IMAGES = {
-    7: 'DEMO-04.png',
-    8: 'groceries.png',
-    9: 'DEMO-02-.png'
+    7: 'DEMO-04.jpg',
+    8: 'groceries.jpg',
+    9: 'cos.jpg'
 }
 
 
@@ -147,6 +144,7 @@ def create_categories(categories_data, placeholder_dir):
         background_image = get_image(placeholder_dir, image_name)
         defaults['background_image'] = background_image
         Category.objects.update_or_create(pk=pk, defaults=defaults)
+        create_category_background_image_thumbnails.delay(pk)
 
 
 def create_attributes(attributes_data):
@@ -167,7 +165,7 @@ def create_attributes_values(values_data):
         AttributeValue.objects.update_or_create(pk=pk, defaults=defaults)
 
 
-def create_products(products_data, placeholder_dir):
+def create_products(products_data, placeholder_dir, create_images):
     for product in products_data:
         pk = product['pk']
         # We are skipping products without images
@@ -180,9 +178,10 @@ def create_products(products_data, placeholder_dir):
         defaults['attributes'] = json.loads(defaults['attributes'])
         product, _ = Product.objects.update_or_create(pk=pk, defaults=defaults)
 
-        images = IMAGES_MAPPING.get(pk, [])
-        for image_name in images:
-            create_product_image(product, placeholder_dir, image_name)
+        if create_images:
+            images = IMAGES_MAPPING.get(pk, [])
+            for image_name in images:
+                create_product_image(product, placeholder_dir, image_name)
 
 
 def create_product_variants(variants_data):
@@ -199,8 +198,9 @@ def create_product_variants(variants_data):
         ProductVariant.objects.update_or_create(pk=pk, defaults=defaults)
 
 
-def create_products_by_schema(placeholder_dir, create_images, stdout=None):
-    with open('saleor/static/db.json') as f:
+def create_products_by_schema(placeholder_dir, create_images):
+    path = os.path.join(settings.PROJECT_ROOT, 'saleor', 'static', 'db.json')
+    with open(path) as f:
         db_items = json.load(f, object_hook=object_hook)
     types = defaultdict(list)
     # Sort db objects by its model
@@ -216,7 +216,7 @@ def create_products_by_schema(placeholder_dir, create_images, stdout=None):
     create_attributes_values(values_data=types['product.attributevalue'])
     create_products(
         products_data=types['product.product'],
-        placeholder_dir=placeholder_dir)
+        placeholder_dir=placeholder_dir, create_images=create_images)
     create_product_variants(variants_data=types['product.productvariant'])
 
 
@@ -531,6 +531,7 @@ def create_fake_collection(placeholder_dir, collection_data):
         image_name=collection_data['image_name'])
     products = Product.objects.order_by('?')[:4]
     collection.products.add(*products)
+    create_collection_background_image_thumbnails.delay(collection.pk)
     return collection
 
 
@@ -542,13 +543,9 @@ def create_collections_by_schema(placeholder_dir, schema=COLLECTIONS_SCHEMA):
 
 def create_page():
     content = """
-    <h2 align="center">AN OPENSOURCE STOREFRONT PLATFORM FOR PERFECTIONISTS</h2>
-    <h3 align="center">WRITTEN IN PYTHON, BEST SERVED AS A BESPOKE, HIGH-PERFORMANCE E-COMMERCE SOLUTION</h3>
-    <p><br></p>
-    <p><img src="http://getsaleor.com/images/main-pic.svg"></p>
-    <p style="text-align: center;">
-        <a href="https://github.com/mirumee/saleor/">Get Saleor</a> today!
-    </p>
+    <h2>E-commerce for the PWA era</h2>
+    <h3>A modular, high performance e-commerce storefront built with GraphQL, Django, and ReactJS.</h3>
+    <p>Saleor is a rapidly-growing open source e-commerce platform that has served high-volume companies from branches like publishing and apparel since 2012. Based on Python and Django, the latest major update introduces a modular front end with a GraphQL API and storefront and dashboard written in React to make Saleor a full-functionality open source e-commerce.</p>
     """
     page_data = {'content': content, 'title': 'About', 'is_visible': True}
     page, dummy = Page.objects.get_or_create(slug='about', **page_data)
@@ -568,7 +565,7 @@ def generate_menu_items(menu: Menu, category: Category, parent_menu_item):
 
 
 def generate_menu_tree(menu):
-    categories = Category.tree.get_queryset()
+    categories = Category.tree.get_queryset().filter(products__isnull=False)
     for category in categories:
         if not category.parent_id:
             for msg in generate_menu_items(menu, category, None):
@@ -579,32 +576,33 @@ def create_menus():
     # Create navbar menu with category links
     top_menu, _ = Menu.objects.get_or_create(
         name=settings.DEFAULT_MENUS['top_menu_name'])
-    if not top_menu.items.exists():
-        yield 'Created navbar menu'
-        for msg in generate_menu_tree(top_menu):
-            yield msg
+    top_menu.items.all().delete()
+    yield 'Created navbar menu'
+    for msg in generate_menu_tree(top_menu):
+        yield msg
 
     # Create footer menu with collections and pages
     bottom_menu, _ = Menu.objects.get_or_create(
         name=settings.DEFAULT_MENUS['bottom_menu_name'])
-    if not bottom_menu.items.exists():
-        collection = Collection.objects.order_by('?')[0]
-        item, _ = bottom_menu.items.get_or_create(
-            name='Collections',
-            collection=collection)
+    bottom_menu.items.all().delete()
+    collection = Collection.objects.filter(
+        products__isnull=False).order_by('?')[0]
+    item, _ = bottom_menu.items.get_or_create(
+        name='Collections',
+        collection=collection)
 
-        for collection in Collection.objects.filter(
-                background_image__isnull=False):
-            bottom_menu.items.get_or_create(
-                name=collection.name,
-                collection=collection,
-                parent=item)
-
-        page = Page.objects.order_by('?')[0]
+    for collection in Collection.objects.filter(
+            products__isnull=False, background_image__isnull=False):
         bottom_menu.items.get_or_create(
-            name=page.title,
-            page=page)
-        yield 'Created footer menu'
+            name=collection.name,
+            collection=collection,
+            parent=item)
+
+    page = Page.objects.order_by('?')[0]
+    bottom_menu.items.get_or_create(
+        name=page.title,
+        page=page)
+    yield 'Created footer menu'
     update_menu(top_menu)
     update_menu(bottom_menu)
     site = Site.objects.get_current()
